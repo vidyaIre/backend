@@ -1,0 +1,11 @@
+{
+  "name": "nodejs_backend",
+  "version": "1.0.0",
+  "description": "To study for nodejs development",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "vidya",
+  "license": "ISC"
+}
