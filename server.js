@@ -1,17 +1,20 @@
 const express = require('express');
+const router = require('./routes');
 const app = express();
 
-app.get('/', (req, res) =>{
-    res.status(200).send('Hello Express !');
-});
-app.get('/about', (req, res) =>{
-    res.status(200).send('Hello  Now you are in about page!');
-});
-app.get('/user', (req, res) =>{
-    res.status(200).send('Hello  user vidya!');
+app.use(express.json());
+app.use(express.urlencoded({extended: true}));
+
+app.use('/api', router);
+
+
+app.get('/', (req, res) => {
+    res.send('Welcome to the API');
 });
 
+
+
 const PORT = 5000;
-app.listen(PORT, () =>{
+app.listen(PORT, () => {
     console.log(`Server is running on PORT ${PORT}`);
 })
