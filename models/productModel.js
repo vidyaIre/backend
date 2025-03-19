@@ -14,6 +14,10 @@ const productSchema = new mongoose.Schema({
         enum: ['small', 'medium', 'large'],
         required: true
     },
+    quantity:{
+        type: Number,
+        required: true
+    },
     isActive:{
         type: Boolean,
         default: true
