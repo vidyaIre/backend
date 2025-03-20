@@ -3,6 +3,7 @@ const userModel = require('../models/userModel');
 module.exports = {
    addUser: (req, res) => {
       try {
+         //console.log(req.body);
          const { name, username, email, age, gender } = req.body;
          console.log(name, username, email, age, gender);
 
@@ -110,59 +111,68 @@ module.exports = {
    },
    addProductToUserCart: (req, res) => {
       try {
+         // console.log(req.body);
          const { userId, product } = req.body;
-         console.log(userId, product);
-         const { productId } = product;
-         const { quantity } = product;
+         //console.log(userId, product);
+         console.log(userId);
+         const { productId, quantity } = product;
+         
          console.log(productId, quantity);
 
          if (userId && productId && quantity) {
             userModel.updateOne(
                { _id: userId },
-               { $push: { cart: { product } } }
+               {
+                  $push: { cart: product }
+               }
             ).then((response) => {
-               console.log("responce is:", response);
-               if (response?.modifiedCount > 0) {
+               console.log(response);
+               if (response?.modifiedCount !== 0) {
                   return res.status(200).json({
                      success: true,
                      statusCode: 200,
-                     message: "Product added to cart successfully......",
-                     data: response.message
-                  });
-               } else {
-                  return res.status(200).json({
-                     success: false,
-                     statusCode: 400,
-                     message: "Product not added to cart!!",
-                     data: error.message
+                     message: "Product added to cart successfully",
+                     data: response
                   });
                }
-            }).catch((error) => {
-               console.log("error is:", error);
-               return res.status(200).json({
+               else {
+                  return res.status(400).json({
+                     success: false,
+                     statusCode: 400,
+                     message: "Product not added to cart"
+                  });
+               }
+            }
+            ).catch((error) => {
+               console.log("error:", error);
+               if (error.code === 11000) {
+                  return res.status(400).json({
+                     success: false,
+                     statusCode: 400,
+                     message: "Product with same category already exists!"
+                  });
+               }
+               return res.status(400).json({
                   success: false,
                   statusCode: 400,
-                  message: "Product not added to cart!!",
-                  data: error.message
+                  message: error.message
                });
             })
-         }
-         else {
-            res.status(400).json({
+
+         } else {
+            return res.status(400).json({
                success: false,
                statusCode: 400,
                message: " missing required fields"
             });
          }
-
-
       } catch (error) {
-         console.log("error: ", error);
          res.status(500).json({
             success: false,
             statusCode: 500,
-            message: "Internal Server Error"
+            message: error.message
          });
       }
    }
+
 }
