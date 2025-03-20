@@ -58,46 +58,38 @@ module.exports = {
    },
    getUser: async (req, res) => {
       try {
-         const user = await userModel.aggregate([
-            {
-               $match: {
-                  age: { $gte: 18 }
-               }
-            },
-            {
-               $sort: {
-                  gender: 1
-               }
-            },
-            { $limit: 3 }
+         //console.log(req);
+         // const users = await userModel.aggregate([
+         //    [
+         //       {
+         //         '$match': {
+         //           'isDeleted': false
+         //         }
+         //       }, {
+         //         '$lookup': {
+         //           'from': 'products', 
+         //           'localField': 'cart.productId', 
+         //           'foreignField': '_id', 
+         //           'as': 'products'
+         //         }
+         //       }, {
+         //         '$sort': {
+         //           'gender': 1
+         //         }
+         //       }
+         //     ]
+         // ]);
+         const users = await userModel
+            .find({ isDeleted: false }).populate('cart').lean();
+            console.log("Printing users")
+            console.log(users);
 
-            // [
-            //    {
-            //      '$match': {
-            //        'age': {
-            //          '$gte': 18
-            //        }
-            //      }
-            //    }, {
-            //      '$sort': {
-            //        'gender': 1
-            //      }
-            //    }, {
-            //      '$match': {
-            //        'gender': 'Male'
-            //      }
-            //    }, {
-            //      '$limit': 2
-            //    }
-            //  ]
-         ]);
-         //console.log(user);
          return res.status(200).json({
             success: true,
             statusCode: 200,
-            count: user.length,
+            count: users.length,
             message: "Users retrieved successfully",
-            data: user
+            data: users
          });
       } catch (error) {
          //console.log("error: ", error);
@@ -116,7 +108,7 @@ module.exports = {
          //console.log(userId, product);
          console.log(userId);
          const { productId, quantity } = product;
-         
+
          console.log(productId, quantity);
 
          if (userId && productId && quantity) {
