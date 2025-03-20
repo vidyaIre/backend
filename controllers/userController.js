@@ -1,17 +1,22 @@
 const userModel = require('../models/userModel');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 module.exports = {
-   addUser: (req, res) => {
+   addUser: async (req, res) => {
       try {
          //console.log(req.body);
-         const { name, username, email, age, gender } = req.body;
-         console.log(name, username, email, age, gender);
+         const { name, username, email, password, age, gender } = req.body;
+         console.log(name, username, email, password, age, gender);
 
-         if (name && username && email && age && gender) {
+         if (name && username && email && password && age && gender) {
+            const encryptedPassword = await bcrypt.hash(password, 10);
+
             const newUser = new userModel({
                name,
                username,
                email,
+               password: encryptedPassword,
                age,
                gender
             });
@@ -58,7 +63,7 @@ module.exports = {
    },
    getUser: async (req, res) => {
       try {
-         //console.log(req);
+         console.log(req);
          // const users = await userModel.aggregate([
          //    [
          //       {
@@ -79,10 +84,14 @@ module.exports = {
          //       }
          //     ]
          // ]);
+         // const users = await userModel
+         //    .find({ isDeleted: false }).populate('cart').lean();
+
          const users = await userModel
-            .find({ isDeleted: false }).populate('cart').lean();
-            console.log("Printing users")
-            console.log(users);
+            .find({ isDeleted: false }).populate('cart.productId').lean();
+
+         console.log("Printing users")
+         console.log(users);
 
          return res.status(200).json({
             success: true,
@@ -92,7 +101,7 @@ module.exports = {
             data: users
          });
       } catch (error) {
-         //console.log("error: ", error);
+         console.log("error: ", error);
          res.status(500).json({
             success: false,
             statusCode: 500,
@@ -159,6 +168,63 @@ module.exports = {
             });
          }
       } catch (error) {
+         res.status(500).json({
+            success: false,
+            statusCode: 500,
+            message: error.message
+         });
+      }
+   },
+   userLogin: async (req, res) => {
+      try {
+         const { email, password } = req.body;
+         if (email && password) {
+            const userFound = await userModel.findOne({ email: email }).lean();
+
+            if (userFound) {
+               const ispasswordMatch =  await bcrypt.compare(password, userFound.password);
+               console.log(ispasswordMatch);
+
+               if (ispasswordMatch) {
+                  delete userFound.password;
+
+                  const jwtSecretKey = process.env.JWT_SECRET_KEY;
+                  const token = jwt.sign(
+                     { userId: userFound?._id },
+                     jwtSecretKey,
+                     { expiresIn: "5d" }
+                  )
+
+                  return res.status(200).json({
+                     success: true,
+                     statusCode: 200,
+                     message: "User login successfully",
+                     token: token,
+                     data: userFound
+                  })
+               } else {
+                  res.status(200).json({
+                     success: false,
+                     statusCode: 200,
+                     message: "Incorrect password"
+                  })
+               }
+            } else {
+               res.status(200).json({
+                  success: false,
+                  statusCode: 200,
+                  message: " User doesnot exists"
+               })
+            }
+         } else {
+            res.status(200).json({
+               success: false,
+               statusCode: 200,
+               message: "Missing required fields"
+            })
+         }
+      } catch (error) {
+         console.log("error is:", error);
          res.status(500).json({
             success: false,
             statusCode: 500,
